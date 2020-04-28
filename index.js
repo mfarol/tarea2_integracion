@@ -18,7 +18,7 @@ app.use(bodyParser.json());
 // mongodb+srv://elquired:<password>@cluster0-hgv0f.mongodb.net/test?retryWrites=true&w=majority
 const dabs = process.env.MONGODB_URL;
 
-mongoose.connect(dabs, { useNewUrlParser: true});
+mongoose.connect("mongodb+srv://elquired:mati1997@cluster0-hgv0f.mongodb.net/test?retryWrites=true&w=majority", { useNewUrlParser: true});
 var db = mongoose.connection;
 
 // Added check for DB connection
