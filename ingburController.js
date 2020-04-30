@@ -2,30 +2,19 @@
 // Import burger model
 Burger = require('./burgerModel');
 Ingredient = require('./ingredientModel');
+Ingbur = require('./ingburModel');
 // Handle index actions
 
 exports.index = function (req, res) {
-    Burger.get(function (err, burgers) {
+    Ingbur.get(function (err, burgers) {
         if (err) {
             res.json({
                 status: "error",
                 message: err,
             });
         }
-        var hamburguesas = new Array();
-        for (var key in burgers) {
-            var dicc = {
-                id: burgers[key]["_id"],
-                nombre: burgers[key]["nombre"],
-                precio: burgers[key]["precio"],
-                descripcion: burgers[key]["descripcion"],
-                imagen: burgers[key]["imagen"],
-                ingredientes: burgers[key]["ingredientes"]
-            }
-            hamburguesas.push(dicc);
-        }
         res.json({
-            hamburguesas
+            burgers
         });
     });
 };
@@ -68,50 +57,85 @@ exports.view = function (req, res) {
 // Handle update burger info
 exports.update = function (req, res) {
     Burger.findById(req.params.burger_id, function (err, burger) {
-        Ingredient.findById(req.params.ingredient_id, function (err, ingredient) {
-            if (err)
-                res.send(err);
-                burger.ingredientes.push({path: 'http://localhost:8080/api/ingrediente/' + ingredient._id.toString()});
-    // save the burger and check for errors
-            burger.save(function (err) {
-                if (err)
-                    res.json(err);
-                res.json({
-                    id: burger._id,
-                    nombre: burger.nombre,
-                    precio: burger.precio,
-                    descripcion: burger.descripcion,
-                    imagen: burger.imagen,
-                    ingredientes: burger.ingredientes
-                });
+        if (burger == null) {
+            res.status(400).send("Id de hamburguesa inválido");
+        }
+        else {
+            Ingredient.findById(req.params.ingredient_id, function (err, ingredient) {
+                if (ingredient == null) {
+                    res.status(404).send("Ingrediente inexistente");
+                }
+                else {
+                    Ingbur.get(function (err, ingburs) {
+                        var verd = 0;
+                        for (var key in ingburs) {
+                            if (ingburs[key].burger == burger._id) {
+                                if (ingburs[key].ingredient == ingredient._id) {
+                                    verd = 1;
+                                }
+                            }
+                        }
+                        if (verd == 0) {
+                            var ingbur = new Ingbur();
+                            ingbur.burger = req.params.burger_id;
+                            ingbur.ingredient = req.params.ingredient_id;
+                            ingbur.save();
+                            burger.ingredientes.push({path: 'https://aqueous-fortress-96382.herokuapp.com/api/ingrediente/' + ingredient._id.toString()});
+                            burger.save();
+                            res.status(201).send("Ingrediente agregado");
+                        }
+                        else {
+                            res.status(201).send("Ingrediente agregado");
+                        }
+                    });
+                }
             });
-        });
+        }
     });
 };
 // Handle delete burger
 exports.delete = function (req, res) {
     Burger.findById(req.params.burger_id, function (err, burger) {
-        Ingredient.findById(req.params.ingredient_id, function (err, ingredient) {
-            if (err)
-                res.send(err);
-                for (var key in burger.ingredientes) {
-                    if (burger.ingredientes[key]["path"].slice(-1) === ingredient._id.toString()) {
-                        burger.ingredientes.splice(key, 1);
-                    }
+        if (burger == null) {
+            res.status(400).send("Id de hamburguesa inválido");
+        }
+        else {
+            Ingredient.findById(req.params.ingredient_id, function (err, ingredient) {
+                if (ingredient == null) {
+                    res.status(404).send("Ingrediente inexistente");
                 }
-    // save the burger and check for errors
-            burger.save(function (err) {
-                if (err)
-                    res.json(err);
-                res.json({
-                    id: burger._id,
-                    nombre: burger.nombre,
-                    precio: burger.precio,
-                    descripcion: burger.descripcion,
-                    imagen: burger.imagen,
-                    ingredientes: burger.ingredientes
-                });
+                else {
+                    var largo_ingrediente = ingredient._id.toString().length;
+                    var verd = 0;
+                    Ingbur.get(function(err, ingburs) {
+                        for (var key in ingburs) {
+                            if (ingburs[key].burger == burger._id) {
+                                if (ingburs[key].ingredient == ingredient._id) {
+                                    verd = 1;
+                                    var tupla = ingburs[key];
+                                }
+                            }
+                        }
+                        if (verd == 1) {
+                            for (var key in burger.ingredientes) {
+                                if (burger.ingredientes[key]["path"].slice(-largo_ingrediente) === ingredient._id.toString()) {
+                                    burger.ingredientes.splice(key, 1);
+                                }
+                            }
+                            burger.save();
+                            Ingbur.remove({
+                                _id: tupla._id
+                            }, function (err, ingbur) {
+                                console.log("ingbur retirado");
+                            });
+                            res.status(200).send("ingrediente retirado");
+                        }
+                        else {
+                            res.status(404).send("Ingrediente inexistente en la hamburguesa")
+                        }
+                    });
+                }
             });
-        });
+        }
     });
 };

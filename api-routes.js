@@ -32,5 +32,7 @@ router.route('/ingrediente/:ingredient_id')
 router.route('/hamburguesa/:burger_id/ingrediente/:ingredient_id')
     .put(ingburController.update)
     .delete(ingburController.delete);
+router.route('/ingbur')
+    .get(ingburController.index)
 // Export API routes
 module.exports = router;
