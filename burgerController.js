@@ -23,9 +23,9 @@ exports.index = function (req, res) {
             }
             hamburguesas.push(dicc);
         }
-        res.status(200).json({
+        res.status(200).json(
             hamburguesas
-        });
+        );
     });
 };
 // Handle create burger actions

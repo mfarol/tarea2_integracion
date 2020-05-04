@@ -22,9 +22,9 @@ exports.index = function (req, res) {
             }
             ingredientes.push(dicc);
         }
-        res.status(200).json({
+        res.status(200).json(
             ingredientes
-        });
+        );
     });
 };
 // Handle create ingredients actions
